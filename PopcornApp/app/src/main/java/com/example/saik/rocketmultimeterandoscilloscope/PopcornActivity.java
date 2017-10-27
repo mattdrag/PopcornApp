@@ -1,10 +1,15 @@
 package com.example.saik.rocketmultimeterandoscilloscope;
 
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -23,7 +28,9 @@ import java.text.DecimalFormat;
 
 public class PopcornActivity extends AppCompatActivity {
 
-    int voltDataBT;
+    private static String TAG = "Popcorn";
+    private static final int RECORD_REQUEST_CODE = 101;
+
     TextView display;
     boolean isRecording = false;
     Handler handler;
@@ -40,8 +47,16 @@ public class PopcornActivity extends AppCompatActivity {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_popcorn);
 
+        //Request microphone permission
+        int permission = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "Permission to record denied");
+            makeRequest();
+        }
+
         display = (TextView) findViewById(R.id.voltmeter);
-        voltDataBT = 0;
         display.setText(new DecimalFormat("##.##").format(0) + " dbs");
         final Button recTog = (Button) findViewById(R.id.ampmeterButton);
         recTog.setOnClickListener(new View.OnClickListener() {
@@ -58,16 +73,18 @@ public class PopcornActivity extends AppCompatActivity {
                 }
             }
         });
+
+        //TODO: Potentially 100ms is too much, we could try using Thread.sleep(5) for a 5ms delay but some other graphing code will have to change.
         final Runnable updater = new Runnable() {
             @Override
             public void run() {
                 if (isRecording) {
                     display.setText(new DecimalFormat("##.##").format(audioMeter.getAmplitude()) + " dbs");
                     addEntry();
-                    handler.postDelayed(this, 30); //1ms delay
+                    handler.postDelayed(this, 100); //30ms delay
                 }
                 else {
-                    handler.postDelayed(this, 30); //1ms delay
+                    handler.postDelayed(this, 100); //30ms delay
                 }
             }
         };
@@ -98,12 +115,19 @@ public class PopcornActivity extends AppCompatActivity {
         viewport.setMaxX(10);
 
         graph.getGridLabelRenderer().setGridColor(Color.WHITE);
-        graph.getGridLabelRenderer().setVerticalAxisTitle("Voltage");
+        graph.getGridLabelRenderer().setVerticalAxisTitle("Decibels");
         graph.getGridLabelRenderer().setVerticalAxisTitleColor(Color.WHITE);
         graph.getGridLabelRenderer().setVerticalLabelsColor(Color.WHITE);
         graph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
         graph.getGridLabelRenderer().setHorizontalAxisTitleColor(Color.WHITE);
         graph.getGridLabelRenderer().setHorizontalLabelsColor(Color.WHITE);
+    }
+
+    //request mic permission
+    protected void makeRequest() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.RECORD_AUDIO},
+                RECORD_REQUEST_CODE);
     }
 
     //For graphing points

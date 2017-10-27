@@ -27,7 +27,7 @@
             android:layout_height="match_parent"
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
-            android:text="Voltmeter &#10; 0-5 Volts"
+            android:text="Popcorn Button #1 "
             android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button"
             tools:layout_editor_absoluteX="189dp"
             tools:layout_editor_absoluteY="16dp" />
@@ -48,7 +48,7 @@
         android:id="@+id/btn_oscilloscope"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Oscilloscope"
+        android:text="Popcorn Button #5 "
         android:layout_marginTop="30dp"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout5"
         android:layout_marginRight="8dp"
@@ -78,7 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="0"
-            android:text="Voltmeter &#10; 0-10 Volts"
+            android:text="Popcorn Button #2 "
             android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button"
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
@@ -118,7 +118,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="0"
-            android:text="Voltmeter &#10; 0-50 Volts"
+            android:text="Popcorn Button #3 "
             android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button"
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
@@ -156,7 +156,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
             android:layout_weight="0"
-            android:text="Ampmeter "
+            android:text="Popcorn Button #4 "
             tools:layout_editor_absoluteX="249dp"
             tools:layout_editor_absoluteY="406dp" />
 
@@ -166,7 +166,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:text="Warning! Do not connect loads in excess of 5A or 5 Volts! Severe damage to device may occur!!! &#10;"
+            android:text="TODO: These can be different settings for popcorn bags or something"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textColor="@android:color/holo_red_dark"
             android:textSize="18sp" />

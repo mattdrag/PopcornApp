@@ -11,12 +11,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity" android:screenOrientation="portrait"/>
-
-        <service
-            android:name=".BTService"
-            android:enabled="true"
-            android:exported="true" />
 
         <activity android:name=".MenuActivity"
             android:screenOrientation="portrait">
@@ -28,19 +22,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".VoltmeterActivity"
-            android:screenOrientation="portrait"/>
-
-        <activity android:name=".OscilloscopeActivity"
-            android:screenOrientation="landscape" />
-
-        <activity android:name=".AmpmeterActivity"
-            android:screenOrientation="portrait"/>
-
         <activity android:name=".PopcornActivity"
-            android:screenOrientation="portrait"/>
-
-        <activity android:name=".Voltmeter0to50Activity"
             android:screenOrientation="portrait"/>
 
     </application>
