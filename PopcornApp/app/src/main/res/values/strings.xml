@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">RocketMultimeterAndOscilloscope</string>
+    <string name="title_activity_oscilliscope">OscilliscopeActivity</string>
+</resources>
