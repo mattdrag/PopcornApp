@@ -25,6 +25,7 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent myIntent = new Intent(MenuActivity.this, PopcornActivity.class);
+                myIntent.putExtra("kernals", 50);
                 MenuActivity.this.startActivity(myIntent);
             }
         });
@@ -34,6 +35,7 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent myIntent = new Intent(MenuActivity.this, PopcornActivity.class);
+                myIntent.putExtra("kernals", 100);
                 MenuActivity.this.startActivity(myIntent);
             }
         });
@@ -43,6 +45,7 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent myIntent = new Intent(MenuActivity.this, PopcornActivity.class);
+                myIntent.putExtra("kernals", 150);
                 MenuActivity.this.startActivity(myIntent);
             }
         });
@@ -52,6 +55,7 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent myIntent = new Intent(MenuActivity.this, PopcornActivity.class);
+                myIntent.putExtra("kernals", 200);
                 MenuActivity.this.startActivity(myIntent);
             }
         });
@@ -61,6 +65,7 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent myIntent = new Intent(MenuActivity.this, PopcornActivity.class);
+                myIntent.putExtra("kernals", 250);
                 MenuActivity.this.startActivity(myIntent);
             }
         });

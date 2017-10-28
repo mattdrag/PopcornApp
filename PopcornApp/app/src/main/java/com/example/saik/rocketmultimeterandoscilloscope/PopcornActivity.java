@@ -2,6 +2,7 @@ package com.example.saik.rocketmultimeterandoscilloscope;
 
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Handler;
@@ -27,6 +28,9 @@ import android.media.MediaRecorder;
 import java.text.DecimalFormat;
 
 public class PopcornActivity extends AppCompatActivity {
+    Intent intent = getIntent();
+    //If we want a feature for counting pops
+    int numKernals = intent.getIntExtra("kernals", -1);
 
     private static String TAG = "Popcorn";
     private static final int RECORD_REQUEST_CODE = 101;
