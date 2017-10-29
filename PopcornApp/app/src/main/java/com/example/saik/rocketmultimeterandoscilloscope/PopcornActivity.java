@@ -2,11 +2,16 @@ package com.example.saik.rocketmultimeterandoscilloscope;
 
 
 import android.Manifest;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +20,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
+import java.util.Vector;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.Viewport;
@@ -28,9 +34,9 @@ import android.media.MediaRecorder;
 import java.text.DecimalFormat;
 
 public class PopcornActivity extends AppCompatActivity {
-    Intent intent = getIntent();
+    Intent intent = getIntent(); //TODO: getting extras crashes program (might have to unwrap integer)
     //If we want a feature for counting pops
-    int numKernals = intent.getIntExtra("kernals", -1);
+    //int numKernals = intent.getIntExtra("kernals", -1);
 
     private static String TAG = "Popcorn";
     private static final int RECORD_REQUEST_CODE = 101;
@@ -74,6 +80,7 @@ public class PopcornActivity extends AppCompatActivity {
                     isRecording = true;
                     recTog.setText("Pause");
                     audioMeter.start();
+                    pop_phase_txt.setText("PRE_POP"); //update UI
                 }
             }
         });
@@ -97,6 +104,12 @@ public class PopcornActivity extends AppCompatActivity {
             //  POST_POP:   Final state
             //              triggers some alarm for user to notify them popcorn is done
             byte POP_STATE = 0; //[ PRE_POP, POP_PHASE, POST_POP ] ==> [ 0, 1, 2 ]
+            Vector<Double> VAmbientNoise = new Vector<>(1000, 100); //For determining ambient noise in PRE_POP
+            int numPops;    // For setting didStartPopping in POP_PHASE
+            boolean didStartPopping = false;
+            long popInterval = 0; // The time in milliseconds between pop audio samples.
+            long timeOfLastPop = 0;
+            boolean didFinish = false; // For playing alarm one time in POST_POP
 
 
             //These bounds will be defined during the PRE_POP and POP_PHASE
@@ -104,10 +117,10 @@ public class PopcornActivity extends AppCompatActivity {
             //      we predefine AMBIENT_MAX to be the maximum ambient
             //      range the popcorn sensor can operate at
             final int AMBIENT_MAX = 0; //TODO
-            int AMBIENT_NOISE_LOWER_BOUND = 0;
-            int AMBIENT_NOISE_UPPER_BOUND = 0;
-            int POPCORN_NOISE_LOWER_BOUND = 0;
-            int POPCORN_NOISE_UPPER_BOUND = 0;
+            double AMBIENT_NOISE_LOWER_BOUND = 0.0;
+            double AMBIENT_NOISE_UPPER_BOUND = 0.0;
+            double POPCORN_NOISE_LOWER_BOUND = 0.0;
+            double POPCORN_NOISE_UPPER_BOUND = 0.0;
 
             @Override
             public void run() {
@@ -119,46 +132,106 @@ public class PopcornActivity extends AppCompatActivity {
                     }
 
                     //Do work depending on which phase we are in
-                    if (POP_STATE == 0){ //PRE_POP
+                    ////////////// PRE_POP //////////////
+                    if (POP_STATE == 0){
                         //TODO: For now, after 10 seconds, advance phase
                         long deltaTime = System.currentTimeMillis() - startTimeInMillis;
-                        if (deltaTime >= 10000){
-                            POP_STATE = 1;
+                        if (deltaTime >= 10000){    // Finish condition
+                            updateDisplay();
+                            determineAmbient();
+                            POP_STATE = 1; // Enter POP_PHASE
+                            pop_phase_txt.setText("POP_PHASE: P1"); //update UI
                         }
-                        updateDisplay();
-                    }
-                    else if (POP_STATE == 1){ //POP_PHASE
-                        //TODO: For now, after 30 seconds, advance phase
-                        long deltaTime = System.currentTimeMillis() - startTimeInMillis;
-                        if (deltaTime >= 40000){
-                            POP_STATE = 2;
+                        else{                       // Rest of the loops
+                            VAmbientNoise.add(updateDisplay());
                         }
-                        updateDisplay();
                     }
-                    else{ //POST_POP
-                        updateDisplay();
+
+                    ////////////// POP_PHASE  //////////////
+                    else if (POP_STATE == 1){
+                        // We need to determine when the popcorn begins to pop. Any audio sample that
+                        // is above the AMBIENT_NOISE_UPPER_BOUND can potentially be a pop, so that is a valid pop sample.
+                        // When we receive a total of 100 valid pop samples,didStartPopping will be set to true
+                        // and we initiate waiting for the interval to lengthen to 2s.
+                        double audioReading = updateDisplay();
+                        if (audioReading > AMBIENT_NOISE_UPPER_BOUND){
+                            //Sound is confirmed to be a pop
+                            popInterval = System.currentTimeMillis() - timeOfLastPop;
+                            timeOfLastPop = System.currentTimeMillis(); //Update timeOfLastPop for next iteration
+                            // If we didnt start popping yet
+                            if (!didStartPopping){
+                                numPops++;
+                                if (numPops == 100){
+                                    didStartPopping = true;
+                                    pop_phase_txt.setText("POP_PHASE: P2"); //update UI
+                                }
+                            }
+                        }
+
+                        // We should only look to advance to the next state if we already began popping.
+                        if(didStartPopping){
+                            if (popInterval >= 2000){ // Finish condition
+                                //The popcorn is done!
+                                pop_phase_txt.setText("POST_POP"); //update UI
+                                POP_STATE = 2; // Enter POST_POP
+                            }
+                        }
+                    }
+
+                    ////////////// POST_POP  //////////////
+                    else{
+                        //alarm user (should only play once)
+                        if (didFinish) {
+                            //Define Notification Manager
+                            NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
+                            //Define sound URI
+                            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
+                                    .setContentTitle("Title")
+                                    .setContentText("Message")
+                                    .setSound(soundUri); //This sets the sound to play
+
+                            //Display notification
+                            notificationManager.notify(0, mBuilder.build());
+                        }
                     }
                     handler.postDelayed(this, 10); //100ms delay
                 }
-                else {
+                else {      // Start button has not yet been pressed
                     handler.postDelayed(this, 10); //100ms delay
                 }
             }
 
             //Updates all UI elements. helper for run() code
-            public void updateDisplay(){
-                display_txt.setText(new DecimalFormat("##.##").format(audioMeter.getAmplitude()) + " dbs");
-                if (POP_STATE == 0){ //PRE_POP
-                    pop_phase_txt.setText("PRE_POP");
+            public double updateDisplay(){
+                double audioReading = addEntry();
+                display_txt.setText(new DecimalFormat("##.##").format(audioReading) + " dbs");
+                return(audioReading);  //Takes about 100-120ms
+                                       //addEntry calls audioMeter.getAmplitude(), and returns the audio reading
+            }
+
+            // Called after the PRE_POP phase, gets statistics on data and fills in the AMBIENT_NOISE_UPPER_BOUND
+            private void determineAmbient(){
+                //Get the mean
+                double sum = 0.0;
+                for(double x : VAmbientNoise){
+                    sum += x;
                 }
-                else if (POP_STATE == 1){ //POP_PHASE
-                    pop_phase_txt.setText("POP_PHASE");
-                }
-                else{ //POST_POP
-                    pop_phase_txt.setText("POST_POP");
-                }
-                addEntry();  //Takes about 100-120ms
-                             //addEntry calls audioMeter.getAmplitude(), which is the bottleneck
+                double mean = sum/VAmbientNoise.size();
+
+                //Get the variance
+                double temp = 0;
+                for(double a : VAmbientNoise)
+                    temp += (a-mean)*(a-mean);
+                double var =  temp/(VAmbientNoise.size()-1);
+
+                //Get the stdev
+                double stdev = Math.sqrt(var);
+
+                //Set AMBIENT_NOISE_UPPER_BOUND to the upper 95th percentile TODO: maybe 1 stdev?
+                AMBIENT_NOISE_UPPER_BOUND = mean + (2*stdev);
             }
         };
         handler.post(updater);
@@ -207,17 +280,18 @@ public class PopcornActivity extends AppCompatActivity {
                 RECORD_REQUEST_CODE);
     }
 
-    //Function for graphing points
-    private void addEntry() {
+    // Function for graphing points
+    private double addEntry() {
+        double audioReading = audioMeter.getAmplitude();
         if (lastX < 10.0){
-            series.appendData(new DataPoint(lastX, audioMeter.getAmplitude()), false, 10000); // we can store 10000 values at a time
+            series.appendData(new DataPoint(lastX, audioReading), false, 10000); // we can store 10000 values at a time
         }
         else{
-            series.appendData(new DataPoint(lastX, audioMeter.getAmplitude()), true, 10000); // we can store 10000 values at a time
+            series.appendData(new DataPoint(lastX, audioReading), true, 10000); // we can store 10000 values at a time
         }
         lastX += 0.125; //Estimates delay to make timing on graph accurate to system time. Graph will roughly move along with real time, with some error.
+        return audioReading;
     }
-
 
     //-----------------------------------------------------------------------------//
     //---------------------- Audio recording class --------------------------------//
