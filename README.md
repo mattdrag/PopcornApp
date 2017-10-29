@@ -1,11 +1,8 @@
 # PopcornApp
 
-### Current Functionality
-* Simple menu all leading to the same activity
-* Popcorn Activity receives input from microphone, sets text field at top, and creates a graph entry
+### Functionality
+* App for detecting when popcorn is finished popping
 
 ### TODO:
-* Update menu to pass along settings to PopcornActivity
-* Do something useful with audio input, create ranges and distinguish pops
-* Create functionality for delay in between pops, as well as pre and post pop
-* Potentially change refresh rate of the graph if needed
+* Experiment for better constant values.
+* Make a nice looking GUI
