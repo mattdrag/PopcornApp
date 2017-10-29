@@ -2,6 +2,7 @@ package com.example.saik.rocketmultimeterandoscilloscope;
 
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
@@ -30,6 +31,7 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.widget.Toast;
 
 import java.text.DecimalFormat;
 
@@ -119,8 +121,6 @@ public class PopcornActivity extends AppCompatActivity {
             final int AMBIENT_MAX = 0; //TODO
             double AMBIENT_NOISE_LOWER_BOUND = 0.0;
             double AMBIENT_NOISE_UPPER_BOUND = 0.0;
-            double POPCORN_NOISE_LOWER_BOUND = 0.0;
-            double POPCORN_NOISE_UPPER_BOUND = 0.0;
 
             @Override
             public void run() {
@@ -151,7 +151,7 @@ public class PopcornActivity extends AppCompatActivity {
                     else if (POP_STATE == 1){
                         // We need to determine when the popcorn begins to pop. Any audio sample that
                         // is above the AMBIENT_NOISE_UPPER_BOUND can potentially be a pop, so that is a valid pop sample.
-                        // When we receive a total of 100 valid pop samples,didStartPopping will be set to true
+                        // When we receive a total of 20 valid pop samples,didStartPopping will be set to true
                         // and we initiate waiting for the interval to lengthen to 2s.
                         double audioReading = updateDisplay();
                         if (audioReading > AMBIENT_NOISE_UPPER_BOUND){
@@ -161,7 +161,7 @@ public class PopcornActivity extends AppCompatActivity {
                             // If we didnt start popping yet
                             if (!didStartPopping){
                                 numPops++;
-                                if (numPops == 100){
+                                if (numPops == 20){
                                     didStartPopping = true;
                                     pop_phase_txt.setText("POP_PHASE: P2"); //update UI
                                 }
@@ -181,20 +181,10 @@ public class PopcornActivity extends AppCompatActivity {
                     ////////////// POST_POP  //////////////
                     else{
                         //alarm user (should only play once)
-                        if (didFinish) {
-                            //Define Notification Manager
-                            NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-
-                            //Define sound URI
-                            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
-                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
-                                    .setContentTitle("Title")
-                                    .setContentText("Message")
-                                    .setSound(soundUri); //This sets the sound to play
-
-                            //Display notification
-                            notificationManager.notify(0, mBuilder.build());
+                        if (!didFinish) {
+                            Toast.makeText(PopcornActivity.this, "Hey your popcorn is done cool thx",
+                                    Toast.LENGTH_LONG).show();
+                            didFinish = true;
                         }
                     }
                     handler.postDelayed(this, 10); //100ms delay
@@ -289,7 +279,7 @@ public class PopcornActivity extends AppCompatActivity {
         else{
             series.appendData(new DataPoint(lastX, audioReading), true, 10000); // we can store 10000 values at a time
         }
-        lastX += 0.125; //Estimates delay to make timing on graph accurate to system time. Graph will roughly move along with real time, with some error.
+        lastX += 0.1; //Estimate to make timing on graph accurate to system time. Graph will roughly move along with real time, with some error.
         return audioReading;
     }
 
