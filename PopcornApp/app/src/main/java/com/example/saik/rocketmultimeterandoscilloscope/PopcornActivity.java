@@ -8,11 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -43,7 +40,7 @@ public class PopcornActivity extends AppCompatActivity {
     private static String TAG = "Popcorn";
     private static final int RECORD_REQUEST_CODE = 101;
 
-    TextView display_txt, pop_phase_txt;
+    TextView display_txt, pop_phase_txt, ambient_txt;
     boolean isRecording = false;
     Handler handler;
     private LineGraphSeries<DataPoint> series;
@@ -67,7 +64,10 @@ public class PopcornActivity extends AppCompatActivity {
             makeRequest();
         }
 
+
         // Set up UI
+        ambient_txt = (TextView) findViewById(R.id.ambient);
+        pop_phase_txt = (TextView) findViewById(R.id.popPhase);
         display_txt = (TextView) findViewById(R.id.decibelMeter);
         display_txt.setText(new DecimalFormat("##.##").format(0) + " dbs");
         final Button recTog = (Button) findViewById(R.id.startButton);
@@ -86,7 +86,6 @@ public class PopcornActivity extends AppCompatActivity {
                 }
             }
         });
-        pop_phase_txt = (TextView) findViewById(R.id.popPhase);
 
         ////////////////////////////////////////
         ////// Main thread for doing work //////
@@ -119,7 +118,6 @@ public class PopcornActivity extends AppCompatActivity {
             //      we predefine AMBIENT_MAX to be the maximum ambient
             //      range the popcorn sensor can operate at
             final int AMBIENT_MAX = 0; //TODO
-            double AMBIENT_NOISE_LOWER_BOUND = 0.0;
             double AMBIENT_NOISE_UPPER_BOUND = 0.0;
 
             @Override
@@ -138,7 +136,9 @@ public class PopcornActivity extends AppCompatActivity {
                         long deltaTime = System.currentTimeMillis() - startTimeInMillis;
                         if (deltaTime >= 10000){    // Finish condition
                             updateDisplay();
-                            determineAmbient();
+                            //Set AMBIENT_NOISE_UPPER_BOUND
+                            AMBIENT_NOISE_UPPER_BOUND = determineAmbient();
+                            ambient_txt.setText(""+AMBIENT_NOISE_UPPER_BOUND); //update UI
                             POP_STATE = 1; // Enter POP_PHASE
                             pop_phase_txt.setText("POP_PHASE: P1"); //update UI
                         }
@@ -203,7 +203,7 @@ public class PopcornActivity extends AppCompatActivity {
             }
 
             // Called after the PRE_POP phase, gets statistics on data and fills in the AMBIENT_NOISE_UPPER_BOUND
-            private void determineAmbient(){
+            private double determineAmbient(){
                 //Get the mean
                 double sum = 0.0;
                 for(double x : VAmbientNoise){
@@ -221,7 +221,7 @@ public class PopcornActivity extends AppCompatActivity {
                 double stdev = Math.sqrt(var);
 
                 //Set AMBIENT_NOISE_UPPER_BOUND to the upper 95th percentile TODO: maybe 1 stdev?
-                AMBIENT_NOISE_UPPER_BOUND = mean + (2*stdev);
+                return (mean + (2*stdev));
             }
         };
         handler.post(updater);

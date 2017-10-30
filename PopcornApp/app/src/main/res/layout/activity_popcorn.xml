@@ -85,4 +85,18 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="POP_PHASE" />
 
+    <TextView
+        android:id="@+id/ambient"
+        style="@style/CustomFontStyle"
+        android:layout_width="126dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/rounded_corners"
+        android:text="AMBIENT_BOUND"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="AMBIENT_UPPER" />
+
 </android.support.constraint.ConstraintLayout>
