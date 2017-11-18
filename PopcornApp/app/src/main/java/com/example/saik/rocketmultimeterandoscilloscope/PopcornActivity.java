@@ -312,6 +312,7 @@ public class PopcornActivity extends AppCompatActivity {
         }
 
         // TODO: We might have to change the way we get amplitude readings if we need a faster sample rate.
+        // TODO: instead of returning just the max, we may have to count how many times it breaks a parameter of AMBIENT_BOUND
         // TODO: here's a reference : https://stackoverflow.com/questions/21986385/understanding-of-the-audio-recorder-read-buffer
 
         public double getAmplitude() {
