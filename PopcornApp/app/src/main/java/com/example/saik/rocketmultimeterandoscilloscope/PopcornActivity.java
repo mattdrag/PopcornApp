@@ -1,6 +1,6 @@
 package com.example.saik.rocketmultimeterandoscilloscope;
 
-
+//import is degenerate
 import android.Manifest;
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -33,14 +33,14 @@ import android.widget.Toast;
 import java.text.DecimalFormat;
 
 public class PopcornActivity extends AppCompatActivity {
-    Intent intent = getIntent(); //TODO: getting extras crashes program (might have to unwrap integer)
-    //If we want a feature for counting pops
-    //int numKernals = intent.getIntExtra("kernals", -1);
+
+    Intent intent;
+    int[] popSettings;
 
     private static String TAG = "Popcorn";
     private static final int RECORD_REQUEST_CODE = 101;
 
-    TextView display_txt, pop_phase_txt, ambient_txt;
+    TextView display_txt, pop_phase_txt, ambient_txt, num_kernal_txt, num_popped_txt;
     boolean isRecording = false;
     Handler handler;
     private LineGraphSeries<DataPoint> series;
@@ -55,6 +55,11 @@ public class PopcornActivity extends AppCompatActivity {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_popcorn);
 
+        //Grab intent and extras
+        intent = getIntent();
+        //If we want a feature for counting pops
+        popSettings = intent.getIntArrayExtra("pop_settings_arr");
+
         // Request microphone permission
         int permission = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO);
@@ -66,10 +71,16 @@ public class PopcornActivity extends AppCompatActivity {
 
 
         // Set up UI
+        num_kernal_txt = (TextView) findViewById(R.id.numKernals);
         ambient_txt = (TextView) findViewById(R.id.ambient);
         pop_phase_txt = (TextView) findViewById(R.id.popPhase);
         display_txt = (TextView) findViewById(R.id.decibelMeter);
         display_txt.setText(new DecimalFormat("##.##").format(0) + " dbs");
+        num_kernal_txt = (TextView) findViewById(R.id.numKernals);
+        num_kernal_txt.setText("kernals = " + popSettings[0] + " toBePopped = " + popSettings[1]);
+        num_popped_txt = (TextView) findViewById(R.id.numPopped);
+        num_popped_txt.setText("numPopped : " + 0);
+
         final Button recTog = (Button) findViewById(R.id.startButton);
         recTog.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
