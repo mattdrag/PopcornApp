@@ -28,7 +28,7 @@ public class MenuActivity extends AppCompatActivity {
         numPicker1.setMaxValue(500);
         numPicker1.setMinValue(1);
         numPicker1.setDisplayedValues(numbers);
-        numPicker1.setValue(101); // the starting number. +1 bc of 0 base
+        numPicker1.setValue(41); // the starting number. +1 bc of 0 base
         numPicker1.setBackgroundColor(getResources().getColor(android.R.color.white));
 
 
@@ -36,7 +36,7 @@ public class MenuActivity extends AppCompatActivity {
         numPicker2.setMaxValue(500);
         numPicker2.setMinValue(1);
         numPicker2.setDisplayedValues(numbers);
-        numPicker2.setValue(91); //the starting number. +1 bc of 0 base
+        numPicker2.setValue(31); //the starting number. +1 bc of 0 base
         numPicker2.setBackgroundColor(getResources().getColor(android.R.color.white));
 
         //setup buttons

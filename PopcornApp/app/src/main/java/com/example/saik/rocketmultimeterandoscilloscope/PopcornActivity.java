@@ -36,6 +36,7 @@ public class PopcornActivity extends AppCompatActivity {
 
     Intent intent;
     int[] popSettings;
+    int numOfKernals, numToBePopped;
 
     private static String TAG = "Popcorn";
     private static final int RECORD_REQUEST_CODE = 101;
@@ -59,6 +60,8 @@ public class PopcornActivity extends AppCompatActivity {
         intent = getIntent();
         //If we want a feature for counting pops
         popSettings = intent.getIntArrayExtra("pop_settings_arr");
+        numOfKernals = popSettings[0];
+        numToBePopped = popSettings[1];
 
         // Request microphone permission
         int permission = ContextCompat.checkSelfPermission(this,
@@ -77,7 +80,7 @@ public class PopcornActivity extends AppCompatActivity {
         display_txt = (TextView) findViewById(R.id.decibelMeter);
         display_txt.setText(new DecimalFormat("##.##").format(0) + " dbs");
         num_kernal_txt = (TextView) findViewById(R.id.numKernals);
-        num_kernal_txt.setText("kernals = " + popSettings[0] + " toBePopped = " + popSettings[1]);
+        num_kernal_txt.setText("kernals = " + numOfKernals + " toBePopped = " +numToBePopped);
         num_popped_txt = (TextView) findViewById(R.id.numPopped);
         num_popped_txt.setText("numPopped : " + 0);
 
@@ -110,15 +113,14 @@ public class PopcornActivity extends AppCompatActivity {
             //  States:
             //  PRE_POP:    create ranges for ambient noise over 5,
             //              changes state after 10s min of recording
-            //  POP_PHASE:  determine amplitude of pops,
-            //              begin recording interval between pops,
-            //              changes state when interval between pops is >= 2seconds
+            //  POP_PHASE:  count number of pops
+            //              changes state when we've reached numToBePopped number of pops
             //  POST_POP:   Final state
             //              triggers some alarm for user to notify them popcorn is done
             byte POP_STATE = 0; //[ PRE_POP, POP_PHASE, POST_POP ] ==> [ 0, 1, 2 ]
             Vector<Double> VAmbientNoise = new Vector<>(1000, 100); //For determining ambient noise in PRE_POP
             int numPops;    // For setting didStartPopping in POP_PHASE
-            boolean didStartPopping = false;
+            // boolean didStartPopping = false; // Current implementation: we start popping after PRE_POP phase
             long popInterval = 0; // The time in milliseconds between pop audio samples.
             long timeOfLastPop = 0;
             boolean didFinish = false; // For playing alarm one time in POST_POP
@@ -151,7 +153,7 @@ public class PopcornActivity extends AppCompatActivity {
                             AMBIENT_NOISE_UPPER_BOUND = determineAmbient();
                             ambient_txt.setText(""+AMBIENT_NOISE_UPPER_BOUND); //update UI
                             POP_STATE = 1; // Enter POP_PHASE
-                            pop_phase_txt.setText("POP_PHASE: P1"); //update UI
+                            pop_phase_txt.setText("POP_PHASE"); //update UI
                         }
                         else{                       // Rest of the loops
                             VAmbientNoise.add(updateDisplay());
@@ -165,23 +167,17 @@ public class PopcornActivity extends AppCompatActivity {
                         // When we receive a total of 20 valid pop samples,didStartPopping will be set to true
                         // and we initiate waiting for the interval to lengthen to 2s.
                         double audioReading = updateDisplay();
+
+                        // Check if sound is a pop
                         if (audioReading > AMBIENT_NOISE_UPPER_BOUND){
                             //Sound is confirmed to be a pop
                             popInterval = System.currentTimeMillis() - timeOfLastPop;
                             timeOfLastPop = System.currentTimeMillis(); //Update timeOfLastPop for next iteration
-                            // If we didnt start popping yet
-                            if (!didStartPopping){
-                                numPops++;
-                                if (numPops == 20){
-                                    didStartPopping = true;
-                                    pop_phase_txt.setText("POP_PHASE: P2"); //update UI
-                                }
-                            }
-                        }
+                            numPops++;
+                            num_popped_txt.setText("numPopped : " + numPops);
 
-                        // We should only look to advance to the next state if we already began popping.
-                        if(didStartPopping){
-                            if (popInterval >= 2000){ // Finish condition
+                            // Finish condition
+                            if (numPops >= numToBePopped){
                                 //The popcorn is done!
                                 pop_phase_txt.setText("POST_POP"); //update UI
                                 POP_STATE = 2; // Enter POST_POP
@@ -314,6 +310,9 @@ public class PopcornActivity extends AppCompatActivity {
                 audioRecorder.stop();
             }
         }
+
+        // TODO: We might have to change the way we get amplitude readings if we need a faster sample rate.
+        // TODO: here's a reference : https://stackoverflow.com/questions/21986385/understanding-of-the-audio-recorder-read-buffer
 
         public double getAmplitude() {
             short[] buffer = new short[minSize];
